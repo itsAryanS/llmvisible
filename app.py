@@ -5,7 +5,7 @@ from duckduckgo_search import ddg
 
 # --- Page Configuration ---
 st.set_page_config(page_title="LLMVisible GEO Analyzer", layout="centered")
-st.title("🛠️ LLMVisible.com – GEO Analyzer & Advisor")
+st.title("🛠️ LLMVisible.com – Free GEO Analyzer & Advisor")
 
 # --- Load Groq API Key from Secrets ---
 GROQ_API_KEY = st.secrets.get("GROQ_API_KEY")
@@ -124,6 +124,7 @@ Provide:
 2. Deep, actionable recommendations on content structure, schema markup, citations, distribution, technical SEO for AI, and monitoring.
 3. A clear checklist of immediate actions.
 4. An honest forecast of the Geo Score after implementing these suggestions.
+
 Format as a structured advisory report with headings and bullet points.
 """
             if not GROQ_API_KEY:
@@ -138,4 +139,3 @@ Format as a structured advisory report with headings and bullet points.
                     st.write(report)
                 else:
                     st.error(f"Groq API Error: {r.text}")
-```
