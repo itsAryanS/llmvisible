@@ -115,6 +115,8 @@ with tab1:
             "geo_score": geo_score
         }
 
+# (Initial setup and Tab 1 logic unchanged)
+
 # ------------------ Tab 2: GEO Expert ------------------ #
 with tab2:
     st.header("Step 2: PhD-Level GEO Expert Advice & Forecast")
@@ -123,59 +125,68 @@ with tab2:
         st.info("Please complete the analysis in Tab 1 first.")
     else:
         if st.button("Get Expert GEO Advice"):
+            # Build an expert-level GEO prompt with deep analysis and three examples per recommendation
             expert_prompt = f"""
-You are the world's leading Generative Engine Optimization (GEO) expert. You’ve authored PhDs and real-world handbooks on how to appear in AI-generated answers from LLMs. Using Tab 1 results below, perform an in-depth expert analysis.
+You are the world's leading PhD-level Generative Engine Optimization (GEO) expert. Based on the following analysis, provide an in-depth GEO advisory report with three concrete examples for each section. Do NOT give SEO tips—focus solely on LLM visibility strategies.
 
-PROMPT: {data['prompt']}
-BRAND: {data['brand']}
-DOMAIN: {data['domain']}
-GEO SCORE: {data['geo_score']}%
+ANALYSIS:
+- Prompt: {data['prompt']}
+- Brand: {data['brand']}
+- Pre-Optimization GEO Score: {data['geo_score']}%
 
-LLM Response:
-{data['llm_response']}
+LLM Response Snippet:
+"""{data['llm_response'][:500]}..."""
 Brand present in LLM: {data['llm_found']}
-DuckDuckGo prompt visibility: {data['ddg_prompt_found']}
-DuckDuckGo brand/domain visibility: {data['ddg_brand_found']}
+DuckDuckGo Prompt Visibility: {data['ddg_prompt_found']}
+DuckDuckGo Brand/Domain Visibility: {data['ddg_brand_found']}
 
-INSTRUCTIONS:
-Please analyze:
-1. Why this brand did/didn't appear in the LLM response. Use content from the LLM to explain it.
-2. Give deep, GEO-specific advice to make it appear in LLMs. Do not talk about SEO. Go into strategies like:
-   - Entity injection via embeddings, schema context, or fine-tuned RAG
-   - Systematic prompt-style alignment with what LLMs are likely trained on
-   - Data distribution to LLM training surfaces like Reddit, Wikipedia, Medium
-   - Feed-forward citation embedding methods to push citations in.
+REPORT STRUCTURE:
 
-STRUCTURE OUTPUT INTO THE FOLLOWING SECTIONS:
+1. **LLM Visibility Diagnosis**
+   - Explain why the brand did or did not appear, referencing specific phrases from the LLM response.
+   - Provide 3 in-depth diagnostic points with direct quotes.
 
-### 1. LLM Visibility Diagnosis
-- Explain why the brand appeared or didn't in the LLM
-- Reference text snippets from the LLM response
+2. **Prompt Engineering Strategies**
+   - Present 3 advanced prompt templates designed to surface the brand name, with usage examples:
+     1. Template and example invocation
+     2. Template and example invocation
+     3. Template and example invocation
 
-### 2. Prompt Engineering Optimization
-- Suggest 3 expert ways to format prompts so LLMs pull in the brand
-- Give 3 examples
+3. **RAG & Embedding Integration**
+   - Describe 3 methods to incorporate brand documents into retrieval-augmented generation:
+     1. Embedding vectors in Pinecone/Weaviate example
+     2. Hybrid retrieval chain in LangChain example
+     3. Semantic chunking in Haystack example
 
-### 3. Embedding-RAG Optimization
-- Recommend 3 ways to embed the brand in vector DB / knowledge stores
-- Give 3 real-world examples (like LangChain, Haystack, Pinecone)
+4. **Content Injection into LLM Training Surfaces**
+   - Identify 3 platforms for seeding authoritative brand content, with format guidelines:
+     1. Reddit AMA post with brand mention
+     2. Wikipedia stub creation for brand
+     3. Medium article titled in prompt style
 
-### 4. Content Injection to LLM Surfaces
-- Identify 3 platforms where content should be seeded for long-term LLM ingestion
-- Give content format + example per platform (e.g. Reddit AMA, Wikipedia stub)
+5. **Plugin/API Exposure Techniques**
+   - Outline 3 realistic plugin/API endpoints to expose live brand data:
+     1. `/api/v1/brand-info?name={brand}` example
+     2. `/plugins/llmvisible/pricing` example
+     3. `/tools/llmvisible/faq` example
 
-### 5. Plugin / API Feed Strategy
-- Give 3 plugin or API data exposure ideas that LLMs can call live
-- Use realistic endpoint naming
+6. **Contextual Memory & Fine-Tuning Approaches**
+   - Provide 3 strategies to maintain brand context:
+     1. Embedding-based convo memory example
+     2. User persona injection through system messages
+     3. Dynamic context window expansion example
 
-### 6. Memory or Tool Bias Strategy
-- Give 3 examples of how to bias memory/context (e.g. assistant memory, tool-use triggers)
+7. **Monitoring & Iteration Framework**
+   - Recommend 3 key metrics and tools to measure LLM visibility over time:
+     1. Brand mention frequency metric using custom analytics
+     2. Prompt hit rate metric with Perplexity tracking
+     3. Retrieval success rate metric using Peec.ai
 
-### 7. Monitoring & GEO Score Forecasting
-- Recommend 3 metrics (brand recall rate, LLM citation %, prompt hit rate)
-- Forecast post-optimization GEO score and explain why it increased
+8. **Post-Optimization GEO Score Forecast**
+   - Forecast the expected GEO Score after implementing above tactics.
+   - For each tactic, estimate its score impact (e.g., +20% from prompt strategies, +15% from RAG, etc.).
 
-BE SPECIFIC. BE IN-DEPTH. DO NOT GIVE SEO TIPS. THIS IS PURE GEO.
+Provide the advisory report in **clear, numbered sections** and **bullet points**.
 """
             headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
             payload = {"model": "llama3-70b-8192", "messages": [{"role": "user", "content": expert_prompt}]}
@@ -184,6 +195,6 @@ BE SPECIFIC. BE IN-DEPTH. DO NOT GIVE SEO TIPS. THIS IS PURE GEO.
                 r.raise_for_status()
                 report = r.json()["choices"][0]["message"]["content"]
                 st.markdown("### 📋 GEO Expert Advisory Report")
-                st.markdown(report)
+                st.markdown(report, unsafe_allow_html=True)
             except Exception as e:
                 st.error(f"Groq API Error: {e}")
