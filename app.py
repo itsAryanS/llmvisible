@@ -1,59 +1,41 @@
-import streamlit as st
-import requests
-import json
-
-st.set_page_config(page_title="LLMVisible.com", layout="centered")
-st.title("🤖 LLMVisible.com – Be Seen by AI")
-
-tab1, tab2 = st.tabs(["🔍 Prompt Tester", "✍️ AI Content Generator"])
-GROQ_API_KEY = st.secrets.get("GROQ_API_KEY")
-
-# ---------------- TAB 1: Prompt Tester ---------------- #
-with tab1:
-    st.header("🔍 Test if your brand appears in LLM responses")
-
-    prompt = st.text_input("Enter a ChatGPT-like prompt (e.g. 'Best AI tools for students')", key="prompt1")
-    brand = st.text_input("Your brand name (e.g. LLMVisible)", key="brand1")
-
-    if st.button("Run Prompt Test"):
-        if not GROQ_API_KEY:
-            st.warning("Groq API key missing. Set it in Streamlit Cloud > Secrets.")
-        else:
-            headers = {
-                "Authorization": f"Bearer {GROQ_API_KEY}",
-                "Content-Type": "application/json"
-            }
-            payload = {
-                "model": "llama3-70b-8192",  # ✅ RECOMMENDED by Groq (as of May 2025)
-                "messages": [{"role": "user", "content": prompt}]
-            }
-            r = requests.post("https://api.groq.com/openai/v1/chat/completions",
-                              headers=headers, data=json.dumps(payload))
-            if r.status_code == 200:
-                reply = r.json()['choices'][0]['message']['content']
-                st.subheader("🧠 Groq (LLaMA 3) Response")
-                st.write(reply)
-                if brand.lower() in reply.lower():
-                    st.success(f"✅ Yes! Your brand '{brand}' was mentioned.")
-                else:
-                    st.error(f"❌ No mention of '{brand}' in this response.")
-            else:
-                st.error(f"Groq API Error: {r.text}")
-
-# ---------------- TAB 2: Content Generator ---------------- #
+# -------- TAB 2: Ultra-GEO Content Generator -------- #
 with tab2:
-    st.header("✍️ Generate LLM-optimized content")
+    st.header("✍️ Ultra-GEO Content Generator")
 
-    desc = st.text_area("Describe your service (e.g., 'an AI tool that helps students build resumes')")
-    if st.button("Generate Content"):
+    desc = st.text_area(
+        "Describe your product/service (e.g., 'an AI resume builder for students')",
+        height=120
+    )
+    keyword = st.text_input("Enter your primary SEO keyword (e.g., 'AI resume builder')")
+
+    if st.button("Generate Ultra-GEO Content"):
         if not GROQ_API_KEY:
             st.warning("Groq API key missing. Set it in Streamlit Cloud > Secrets.")
         else:
-            content_prompt = f"""
-You are an LLM-focused SEO content expert. Given the following product: "{desc}", do the following:
-1. Suggest 3 blog titles ChatGPT or Groq might mention in answers.
-2. Give 2 FAQ questions with short, helpful answers.
-3. Write a 2-sentence blurb ChatGPT might generate when asked about this product.
+            geo_prompt = f"""
+You are a Generative Engine Optimization expert. For this service:
+
+\"\"\"{desc}\"\"\"
+
+and target keyword: "{keyword}", produce all of the following in markdown, using code blocks where indicated:
+
+1. **SEO-Friendly Blog Titles**: 3–5 titles (<60 chars).
+2. **Meta Tags**: <title> and <meta name="description">.
+3. **URL Slug**: 2–3 concise slug suggestions.
+4. **Content Outline**: H2/H3 headings with word-count estimates.
+5. **FAQs**: 5–7 Q&A pairs formatted as JSON-LD for schema.org/FAQPage.
+6. **Why Choose Us?**: 4–6 bullet-pointed value propositions.
+7. **CTAs**: 3–5 call-to-action lines.
+8. **Linking Plan**: List 3 internal pages to link + 2 external authority references.
+9. **Images & Alt Text**: Suggest 2–3 images and provide alt text.
+10. **Social Preview**: Open Graph & Twitter Card tags + 2 sample social posts.
+11. **Breadcrumb JSON-LD**: A code block for breadcrumb structured data.
+12. **Organization JSON-LD**: A code block with your brand’s org data.
+13. **Snippet Teasers**: 2–3 short answer teasers (40–50 words).
+14. **Competitor Comparison**: A mini-markdown table vs. 2–3 competitors.
+15. **Schema Checklist**: A bullet list of additional schema types to add.
+
+Ensure each section is clearly labeled with markdown headings.
 """
             headers = {
                 "Authorization": f"Bearer {GROQ_API_KEY}",
@@ -61,13 +43,15 @@ You are an LLM-focused SEO content expert. Given the following product: "{desc}"
             }
             payload = {
                 "model": "llama3-70b-8192",
-                "messages": [{"role": "user", "content": content_prompt}]
+                "messages": [{"role": "user", "content": geo_prompt}]
             }
-            r = requests.post("https://api.groq.com/openai/v1/chat/completions",
-                              headers=headers, data=json.dumps(payload))
+            r = requests.post(
+                "https://api.groq.com/openai/v1/chat/completions",
+                headers=headers, data=json.dumps(payload)
+            )
             if r.status_code == 200:
-                reply = r.json()['choices'][0]['message']['content']
-                st.markdown("### 🧠 AI-Generated Content")
-                st.write(reply)
+                geo_output = r.json()['choices'][0]['message']['content']
+                st.markdown("### 🏆 Ultra-GEO Expert Output")
+                st.write(geo_output)
             else:
                 st.error(f"Groq API Error: {r.text}")
