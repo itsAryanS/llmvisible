@@ -123,40 +123,67 @@ with tab2:
         st.info("Please complete the analysis in Tab 1 first.")
     else:
         if st.button("Get Expert GEO Advice"):
-            # Craft an expert-level GEO prompt focusing purely on LLM visibility
             expert_prompt = f"""
-You are a PhD-level Generative Engine Optimization (GEO) expert. Analyze the following LLM and DuckDuckGo findings for brand '{data['brand']}' on prompt '{data['prompt']}':
+You are the world's leading Generative Engine Optimization (GEO) expert. You’ve authored PhDs and real-world handbooks on how to appear in AI-generated answers from LLMs. Using Tab 1 results below, perform an in-depth expert analysis.
 
-LLM findings:
+PROMPT: {data['prompt']}
+BRAND: {data['brand']}
+DOMAIN: {data['domain']}
+GEO SCORE: {data['geo_score']}%
+
+LLM Response:
 {data['llm_response']}
 Brand present in LLM: {data['llm_found']}
+DuckDuckGo prompt visibility: {data['ddg_prompt_found']}
+DuckDuckGo brand/domain visibility: {data['ddg_brand_found']}
 
-DuckDuckGo Prompt URLs:
-{json.dumps([r['href'] for r in data['ddg_prompt_results']], indent=2)}
-Brand in Prompt URLs: {data['ddg_prompt_found']}
+INSTRUCTIONS:
+Please analyze:
+1. Why this brand did/didn't appear in the LLM response. Use content from the LLM to explain it.
+2. Give deep, GEO-specific advice to make it appear in LLMs. Do not talk about SEO. Go into strategies like:
+   - Entity injection via embeddings, schema context, or fine-tuned RAG
+   - Systematic prompt-style alignment with what LLMs are likely trained on
+   - Data distribution to LLM training surfaces like Reddit, Wikipedia, Medium
+   - Feed-forward citation embedding methods to push citations in.
 
-DuckDuckGo Brand/Domain URLs:
-{json.dumps([r['href'] for r in data['ddg_brand_results']], indent=2)}
-Brand in Brand URLs: {data['ddg_brand_found']}
-Pre-Optimization GEO Score: {data['geo_score']}%
+STRUCTURE OUTPUT INTO THE FOLLOWING SECTIONS:
 
-As a GEO expert, provide:
+### 1. LLM Visibility Diagnosis
+- Explain why the brand appeared or didn't in the LLM
+- Reference text snippets from the LLM response
 
-1. **LLM Prompt Strategy**: Three advanced prompt-engineering techniques to surface the brand in LLM responses, with concrete examples.
-2. **RAG Integration**: Three methods to incorporate brand-specific documents into retrieval-augmented pipelines (e.g., embeddings, vector DB usage, selective chunking).
-3. **Custom LLM Plugins/APIs**: Three illustrative examples of API endpoints or plugin actions that expose brand data to an LLM at query time.
-4. **Contextual Memory & Fine-Tuning**: Three approaches to fine-tune or cache context (e.g., embeddings-based memory, user persona injection, dynamic context windows).
-5. **Evaluation & Iteration**: Three metrics (e.g., hit rate, brand mention frequency, response relevance) and three tools/techniques for monitoring LLM visibility over time.
+### 2. Prompt Engineering Optimization
+- Suggest 3 expert ways to format prompts so LLMs pull in the brand
+- Give 3 examples
 
-Finally, forecast the **post-optimization GEO Score** based on implementing these tactics, with rationale for each improvement area.
+### 3. Embedding-RAG Optimization
+- Recommend 3 ways to embed the brand in vector DB / knowledge stores
+- Give 3 real-world examples (like LangChain, Haystack, Pinecone)
+
+### 4. Content Injection to LLM Surfaces
+- Identify 3 platforms where content should be seeded for long-term LLM ingestion
+- Give content format + example per platform (e.g. Reddit AMA, Wikipedia stub)
+
+### 5. Plugin / API Feed Strategy
+- Give 3 plugin or API data exposure ideas that LLMs can call live
+- Use realistic endpoint naming
+
+### 6. Memory or Tool Bias Strategy
+- Give 3 examples of how to bias memory/context (e.g. assistant memory, tool-use triggers)
+
+### 7. Monitoring & GEO Score Forecasting
+- Recommend 3 metrics (brand recall rate, LLM citation %, prompt hit rate)
+- Forecast post-optimization GEO score and explain why it increased
+
+BE SPECIFIC. BE IN-DEPTH. DO NOT GIVE SEO TIPS. THIS IS PURE GEO.
 """
             headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
-            payload = {"model": "llama3-70b-8192", "messages": [{"role": "user", "content": expert_prompt} ]}
+            payload = {"model": "llama3-70b-8192", "messages": [{"role": "user", "content": expert_prompt}]}
             try:
                 r = requests.post("https://api.groq.com/openai/v1/chat/completions", headers=headers, data=json.dumps(payload), timeout=30)
                 r.raise_for_status()
                 report = r.json()["choices"][0]["message"]["content"]
                 st.markdown("### 📋 GEO Expert Advisory Report")
-                st.write(report)
+                st.markdown(report)
             except Exception as e:
                 st.error(f"Groq API Error: {e}")
