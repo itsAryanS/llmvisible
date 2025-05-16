@@ -87,17 +87,17 @@ with tab1:
         for res in ddg_prompt_results:
             st.markdown(f"- [{res['title']}]({res['href']})  \n  {res['snippet']}")
         if ddg_prompt_found:
-            st.success("✅ Brand found in Prompt search results")
+            st.success("✅ Brand found in Prompt results")
         else:
-            st.error("❌ Brand NOT in Prompt search results")
+            st.error("❌ Brand NOT in Prompt results")
 
         st.subheader("🌐 DuckDuckGo Brand/Domain Results")
         for res in ddg_brand_results:
             st.markdown(f"- [{res['title']}]({res['href']})  \n  {res['snippet']}")
         if ddg_brand_found:
-            st.success("✅ Brand found in Brand/Domain search results")
+            st.success("✅ Brand found in Brand/Domain results")
         else:
-            st.error("❌ Brand NOT in Brand/Domain search results")
+            st.error("❌ Brand NOT in Brand/Domain results")
 
         st.markdown(f"## 📊 Pre-Optimization GEO Score: **{geo_score}%**")
 
@@ -123,33 +123,32 @@ with tab2:
         st.info("Please complete the analysis in Tab 1 first.")
     else:
         if st.button("Get Expert GEO Advice"):
+            # Craft an expert-level GEO prompt focusing purely on LLM visibility
             expert_prompt = f"""
-You are a PhD-level Generative Engine Optimization (GEO) expert advising a business owner.
+You are a PhD-level Generative Engine Optimization (GEO) expert. Analyze the following LLM and DuckDuckGo findings for brand '{data['brand']}' on prompt '{data['prompt']}':
 
-Analysis Data:
-- Prompt tested: {data['prompt']}
-- Brand: {data['brand']}
-- Domain: {data['domain'] or 'N/A'}
+LLM findings:
+{data['llm_response']}
+Brand present in LLM: {data['llm_found']}
 
-Results:
-- LLM Response: {data['llm_response'][:200]}...
-- Brand found in LLM: {data['llm_found']}
-- Top DuckDuckGo Prompt Results: {[r['href'] for r in data['ddg_prompt_results']]}
-- Brand in Prompt results: {data['ddg_prompt_found']}
-- Top DuckDuckGo Brand/Domain Results: {[r['href'] for r in data['ddg_brand_results']]}
-- Brand in Brand/Domain results: {data['ddg_brand_found']}
-- Pre-Optimization GEO Score: {data['geo_score']}%
+DuckDuckGo Prompt URLs:
+{json.dumps([r['href'] for r in data['ddg_prompt_results']], indent=2)}
+Brand in Prompt URLs: {data['ddg_prompt_found']}
 
-Provide an in-depth, personalized strategic report including:
-1. Why GEO matters (3 examples of impact)
-2. Content strategy improvements (3 concrete examples: blog titles, FAQ structures, snippet answers)
-3. Schema & structured data recommendations (with 3 JSON-LD code examples)
-4. Technical SEO tactics for AI search (3 actionable items)
-5. Authority-building & citation plan (3 specific sources to target)
-6. Distribution & digital PR strategies (3 channels with examples)
-7. Monitoring & iteration framework (3 KPIs and 3 tools)
+DuckDuckGo Brand/Domain URLs:
+{json.dumps([r['href'] for r in data['ddg_brand_results']], indent=2)}
+Brand in Brand URLs: {data['ddg_brand_found']}
+Pre-Optimization GEO Score: {data['geo_score']}%
 
-Finally, estimate the post-optimization GEO Score and explain how each recommendation drives that improvement.
+As a GEO expert, provide:
+
+1. **LLM Prompt Strategy**: Three advanced prompt-engineering techniques to surface the brand in LLM responses, with concrete examples.
+2. **RAG Integration**: Three methods to incorporate brand-specific documents into retrieval-augmented pipelines (e.g., embeddings, vector DB usage, selective chunking).
+3. **Custom LLM Plugins/APIs**: Three illustrative examples of API endpoints or plugin actions that expose brand data to an LLM at query time.
+4. **Contextual Memory & Fine-Tuning**: Three approaches to fine-tune or cache context (e.g., embeddings-based memory, user persona injection, dynamic context windows).
+5. **Evaluation & Iteration**: Three metrics (e.g., hit rate, brand mention frequency, response relevance) and three tools/techniques for monitoring LLM visibility over time.
+
+Finally, forecast the **post-optimization GEO Score** based on implementing these tactics, with rationale for each improvement area.
 """
             headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
             payload = {"model": "llama3-70b-8192", "messages": [{"role": "user", "content": expert_prompt} ]}
