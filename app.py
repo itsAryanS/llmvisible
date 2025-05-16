@@ -82,21 +82,29 @@ with tab1:
         # 5. Display Results
         st.subheader("🧠 LLM Response")
         st.write(llm_response)
-        st.success("✅ Brand found in LLM") if llm_found else st.error("❌ Brand NOT found in LLM")
+        if llm_found:
+            st.success("✅ Brand found in LLM")
+        else:
+            st.error("❌ Brand NOT found in LLM")
 
         st.subheader("🔍 DuckDuckGo Prompt Results")
         for r in ddg_prompt_results:
             st.markdown(f"- [{r['title']}]({r['href']})")
-        st.success("✅ Brand found in prompt results") if ddg_prompt_found else st.error("❌ Brand NOT found in prompt results")
+        if ddg_prompt_found:
+            st.success("✅ Brand found in prompt results")
+        else:
+            st.error("❌ Brand NOT found in prompt results")
 
         st.subheader("🌐 DuckDuckGo Brand/Domain Results")
         for r in ddg_brand_results:
             st.markdown(f"- [{r['title']}]({r['href']})")
-        st.success("✅ Brand found in brand results") if ddg_brand_found else st.error("❌ Brand NOT found in brand results")
+        if ddg_brand_found:
+            st.success("✅ Brand found in brand results")
+        else:
+            st.error("❌ Brand NOT found in brand results")
 
         st.markdown(f"## 📊 Pre-Optimization GEO Score: **{geo_score}%**")
 
-        # Save state for tab 2
         st.session_state.analysis = {
             "prompt": prompt,
             "brand": brand,
