@@ -1,10 +1,10 @@
-st.title("🛠️ LLMVisible.com – Free GEO Analyzer & Advisor")
-tab1, tab2 = st.tabs(["🔍 Prompt & Brand Tester", "🧑‍💼 GEO Expert Advice"])
-
 import streamlit as st
 import requests
 import json
 from bs4 import BeautifulSoup
+
+st.title("🛠️ LLMVisible.com – Free GEO Analyzer & Advisor")
+tab1, tab2 = st.tabs(["🔍 Prompt & Brand Tester", "🧑‍💼 GEO Expert Advice"])
 
 # ------------------ DuckDuckGo HTML Search ------------------ #
 def duckduckgo_search(query, max_results=5):
