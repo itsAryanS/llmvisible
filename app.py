@@ -1,132 +1,141 @@
 import streamlit as st
-import requests, json
+import requests
+import json
+from duckduckgo_search import ddg
 
-# — Page Config —
+# --- Page Configuration ---
 st.set_page_config(page_title="LLMVisible GEO Analyzer", layout="centered")
-st.title("🛠️ LLMVisible GEO Analyzer")
+st.title("🛠️ LLMVisible.com – GEO Analyzer & Advisor")
 
-# — Secrets —
-GROQ_API_KEY   = st.secrets.get("GROQ_API_KEY")
-SERPAPI_API_KEY= st.secrets.get("SERPAPI_API_KEY")
+# --- Load Groq API Key from Secrets ---
+GROQ_API_KEY = st.secrets.get("GROQ_API_KEY")
 
-# — Tabs —
-tab1, tab2 = st.tabs(["🔍 GEO Analyzer", "🧑‍💼 GEO Expert Advice"])
+# --- Tabs ---
+tab1, tab2 = st.tabs(["🔍 Prompt & Brand Tester", "🧑‍💼 GEO Expert Advice"])
 
-# --- Tab 1: GEO Analyzer ---
+# --- Tab 1: Prompt & Brand Tester ---
 with tab1:
-    st.header("Step 1: Analyze Your Domain & Brand")
-    domain = st.text_input("Domain (optional)", placeholder="example.com")
-    brand  = st.text_input("Brand name", placeholder="LLMVisible")
-    if st.button("Run GEO Analysis"):
-        # Google SERP via SerpApi
-        google_results = []
-        if domain:
-            if not SERPAPI_API_KEY:
-                st.error("🔒 Set SERPAPI_API_KEY in Settings → Secrets")
-            else:
-                params = {
-                    "engine": "google",
-                    "q": f"site:{domain}",
-                    "api_key": SERPAPI_API_KEY,
-                }
-                resp = requests.get("https://serpapi.com/search", params=params)
-                if resp.ok:
-                    data = resp.json().get("organic_results", [])[:5]
-                    for r in data:
-                        google_results.append({
-                            "title":   r.get("title"),
-                            "link":    r.get("link"),
-                            "snippet": r.get("snippet"),
-                        })
-                else:
-                    st.error("❌ SerpApi error: " + resp.text)
+    st.header("Step 1: Test Prompt and Brand Visibility")
+    prompt = st.text_input("Enter a user prompt:", placeholder="Best CRM tools for small business")
+    brand = st.text_input("Enter your brand/business name:", placeholder="MyBrand")
+    domain = st.text_input("Enter your domain (optional):", placeholder="example.com")
 
-        # Display Google results
-        if google_results:
-            st.subheader("🔎 Google Top 5 Results")
-            for item in google_results:
-                st.markdown(f"- [{item['title']}]({item['link']})  \n  {item['snippet']}")
-        else:
-            st.info("No Google data (provide domain & SerpApi key)")
+    if st.button("Run Analysis"):
+        # Containers
+        llm_responses = {}
+        llm_presence = {}
 
-        # LLM Brand Description via Groq
-        llm_output = ""
-        if not brand:
-            st.error("Enter your brand name for LLM analysis")
-        elif not GROQ_API_KEY:
-            st.error("🔒 Set GROQ_API_KEY in Settings → Secrets")
+        # 1) Groq LLM Check (Free)
+        if not GROQ_API_KEY:
+            st.error("⚠️ Please set GROQ_API_KEY in Settings → Secrets.")
         else:
-            headers = {
-                "Authorization": f"Bearer {GROQ_API_KEY}",
-                "Content-Type":  "application/json"
-            }
-            payload = {
-                "model": "llama3-70b-8192",
-                "messages": [{"role": "user", "content": f"What is {brand}? Provide a concise description."}]
-            }
+            headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
+            payload = {"model": "llama3-70b-8192", "messages": [{"role": "user", "content": prompt}]}
             r = requests.post(
                 "https://api.groq.com/openai/v1/chat/completions",
-                headers=headers, data=json.dumps(payload)
+                headers=headers,
+                data=json.dumps(payload)
             )
-            if r.ok:
-                llm_output = r.json()["choices"][0]["message"]["content"]
-                st.subheader("🤖 LLM Brand Description")
-                st.write(llm_output)
+            if r.status_code == 200:
+                text = r.json()["choices"][0]["message"]["content"]
+                llm_responses['Groq'] = text
+                llm_presence['Groq'] = brand.lower() in text.lower()
             else:
-                st.error("❌ Groq error: " + r.text)
+                st.error(f"Groq API Error: {r.text}")
 
-        # Save to session for Tab 2
-        st.session_state.google_results = google_results
-        st.session_state.llm_output     = llm_output
+        # 2) DuckDuckGo Search for Prompt (Free)
+        ddg_prompt_results = ddg(prompt, max_results=5) or []
+        ddg_prompt_presence = any(
+            brand.lower() in ((res.get('title','') + res.get('body','')).lower())
+            for res in ddg_prompt_results
+        )
+
+        # 3) DuckDuckGo Search for Brand/Domain (Free)
+        query = f"site:{domain}" if domain else brand
+        ddg_brand_results = ddg(query, max_results=5) or []
+        ddg_brand_presence = any(
+            brand.lower() in ((res.get('title','') + res.get('body','')).lower())
+            for res in ddg_brand_results
+        )
+
+        # Compute Geo Score: checks = Groq + prompt search + brand search
+        checks = []
+        if 'Groq' in llm_presence:
+            checks.append(llm_presence['Groq'])
+        checks.append(ddg_prompt_presence)
+        checks.append(ddg_brand_presence)
+        geo_score = round((sum(checks) / len(checks)) * 100, 2) if checks else 0
+
+        # Display LLM Results
+        st.subheader("🤖 Groq LLM Response & Presence")
+        if 'Groq' in llm_responses:
+            st.write(llm_responses['Groq'])
+            st.write("✅ Brand found" if llm_presence['Groq'] else "❌ Brand not found")
+
+        # Display DuckDuckGo Prompt Results
+        st.subheader("🔍 DuckDuckGo Search for Prompt")
+        for res in ddg_prompt_results:
+            st.markdown(f"- [{res['title']}]({res['href']})")
+        st.write("✅ Brand in top prompt results" if ddg_prompt_presence else "❌ Brand not in prompt results")
+
+        # Display DuckDuckGo Brand/Domain Results
+        st.subheader("🌐 DuckDuckGo Search for Brand/Domain")
+        for res in ddg_brand_results:
+            st.markdown(f"- [{res['title']}]({res['href']})")
+        st.write("✅ Brand found in brand/domain results" if ddg_brand_presence else "❌ Brand not found in brand/domain results")
+
+        # Display Geo Score
+        st.markdown(f"## 📊 Pre-Optimization Geo Score: **{geo_score}%**")
+
+        # Store analysis for Tab 2
+        st.session_state.analysis = {
+            'prompt': prompt,
+            'brand': brand,
+            'domain': domain,
+            'llm_response': llm_responses.get('Groq',''),
+            'llm_presence': llm_presence.get('Groq', False),
+            'ddg_prompt_presence': ddg_prompt_presence,
+            'ddg_brand_presence': ddg_brand_presence,
+            'geo_score': geo_score
+        }
 
 # --- Tab 2: GEO Expert Advice ---
 with tab2:
-    st.header("Step 2: GEO Expert Advice")
-    if not st.session_state.get("llm_output"):
-        st.info("Run the GEO Analysis in Tab 1 first")
+    st.header("Step 2: PhD-Level GEO Expert Advice & Forecast")
+    data = st.session_state.get('analysis')
+    if not data:
+        st.info("Run Step 1 in Tab 1 to get analysis data first.")
     else:
-        if st.button("Generate GEO Advice"):
-            google_results = st.session_state.get("google_results", [])
-            llm_output     = st.session_state.get("llm_output", "")
-
-            # Build expert prompt
+        if st.button("Generate GEO Expert Advice"):
             advice_prompt = f"""
-You are a PhD-level Generative Engine Optimization (GEO) expert consulting a business owner.
-Domain: {domain}
-Brand: {brand}
+You are a PhD-level expert in Generative Engine Optimization (GEO). Analyze the following:
 
-Top 5 Google results (title, link, snippet):
-{json.dumps(google_results, indent=2)}
+Prompt: {data['prompt']}
+Brand: {data['brand']}
+Domain: {data['domain'] or 'N/A'}
 
-LLM Output:
-{llm_output}
+Groq LLM Presence: {data['llm_presence']}
+DuckDuckGo Prompt Presence: {data['ddg_prompt_presence']}
+DuckDuckGo Brand/Domain Presence: {data['ddg_brand_presence']}
+Pre-Optimization Geo Score: {data['geo_score']}%
 
-Provide detailed, actionable suggestions and strategic advice covering:
-- Why GEO is critical
-- Content structure & schema
-- Technical SEO for AI
-- Authority & citations (E-E-A-T)
-- Distribution & PR
-- Monitoring & iteration
-- Any other GEO best practices
-Format as a clear, bullet-pointed advisory report.
+Provide:
+1. Why GEO matters for this business.
+2. Deep, actionable recommendations on content structure, schema markup, citations, distribution, technical SEO for AI, and monitoring.
+3. A clear checklist of immediate actions.
+4. An honest forecast of the Geo Score after implementing these suggestions.
+Format as a structured advisory report with headings and bullet points.
 """
-
-            headers = {
-                "Authorization": f"Bearer {GROQ_API_KEY}",
-                "Content-Type":  "application/json"
-            }
-            payload = {
-                "model": "llama3-70b-8192",
-                "messages": [{"role": "user", "content": advice_prompt}]
-            }
-            r = requests.post(
-                "https://api.groq.com/openai/v1/chat/completions",
-                headers=headers, data=json.dumps(payload)
-            )
-            if r.ok:
-                advice = r.json()["choices"][0]["message"]["content"]
-                st.markdown("### 📋 GEO Expert Report")
-                st.write(advice)
+            if not GROQ_API_KEY:
+                st.error("⚠️ Set your GROQ_API_KEY in Settings → Secrets.")
             else:
-                st.error("❌ Groq error: " + r.text)
+                headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
+                payload = {"model": "llama3-70b-8192", "messages":[{"role":"user","content":advice_prompt}]}                
+                r = requests.post("https://api.groq.com/openai/v1/chat/completions", headers=headers, data=json.dumps(payload))
+                if r.status_code == 200:
+                    report = r.json()["choices"][0]["message"]["content"]
+                    st.markdown("### 📋 GEO Expert Advisory Report")
+                    st.write(report)
+                else:
+                    st.error(f"Groq API Error: {r.text}")
+```
