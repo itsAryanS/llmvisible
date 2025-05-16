@@ -1,104 +1,132 @@
 import streamlit as st
-import requests
-import json
+import requests, json
 
-# — Page Configuration —
-st.set_page_config(page_title="LLMVisible.com", layout="centered")
-st.title("🤖 LLMVisible.com – Be Seen by AI")
+# — Page Config —
+st.set_page_config(page_title="LLMVisible GEO Analyzer", layout="centered")
+st.title("🛠️ LLMVisible GEO Analyzer")
 
-# — Load API Key from Secrets —
-GROQ_API_KEY = st.secrets.get("GROQ_API_KEY")
+# — Secrets —
+GROQ_API_KEY   = st.secrets.get("GROQ_API_KEY")
+SERPAPI_API_KEY= st.secrets.get("SERPAPI_API_KEY")
 
-# — Create Tabs —
-tab1, tab2 = st.tabs(["🔍 Prompt Tester", "✍️ Ultra-GEO Content Generator"])
+# — Tabs —
+tab1, tab2 = st.tabs(["🔍 GEO Analyzer", "🧑‍💼 GEO Expert Advice"])
 
-# — Tab 1: Prompt Tester —
+# --- Tab 1: GEO Analyzer ---
 with tab1:
-    st.header("🔍 Test Brand Visibility in LLM Responses")
-    prompt = st.text_input("Enter a user prompt (e.g., 'Best AI resume tools')", key="prompt1")
-    brand = st.text_input("Your brand name (e.g., LLMVisible)", key="brand1")
-
-    if st.button("Run Prompt Test"):
-        if not GROQ_API_KEY:
-            st.warning("Groq API key missing. Add it under Settings → Secrets.")
-        else:
-            headers = {
-                "Authorization": f"Bearer {GROQ_API_KEY}",
-                "Content-Type": "application/json"
-            }
-            payload = {
-                "model": "llama3-70b-8192",
-                "messages": [{"role": "user", "content": prompt}]
-            }
-            r = requests.post(
-                "https://api.groq.com/openai/v1/chat/completions",
-                headers=headers,
-                data=json.dumps(payload)
-            )
-            if r.status_code == 200:
-                reply = r.json()["choices"][0]["message"]["content"]
-                st.subheader("🧠 Groq Response")
-                st.write(reply)
-                if brand.lower() in reply.lower():
-                    st.success(f"✅ Your brand '{brand}' was mentioned!")
+    st.header("Step 1: Analyze Your Domain & Brand")
+    domain = st.text_input("Domain (optional)", placeholder="example.com")
+    brand  = st.text_input("Brand name", placeholder="LLMVisible")
+    if st.button("Run GEO Analysis"):
+        # Google SERP via SerpApi
+        google_results = []
+        if domain:
+            if not SERPAPI_API_KEY:
+                st.error("🔒 Set SERPAPI_API_KEY in Settings → Secrets")
+            else:
+                params = {
+                    "engine": "google",
+                    "q": f"site:{domain}",
+                    "api_key": SERPAPI_API_KEY,
+                }
+                resp = requests.get("https://serpapi.com/search", params=params)
+                if resp.ok:
+                    data = resp.json().get("organic_results", [])[:5]
+                    for r in data:
+                        google_results.append({
+                            "title":   r.get("title"),
+                            "link":    r.get("link"),
+                            "snippet": r.get("snippet"),
+                        })
                 else:
-                    st.error(f"❌ '{brand}' not found in the response.")
-            else:
-                st.error(f"Groq API Error: {r.text}")
+                    st.error("❌ SerpApi error: " + resp.text)
 
-# — Tab 2: Ultra-GEO Content Generator —
-with tab2:
-    st.header("✍️ Generate Full GEO Playbook")
-
-    desc = st.text_area(
-        "Describe your product/service",
-        placeholder="e.g., 'An AI resume builder for students'",
-        height=120
-    )
-    keyword = st.text_input("Primary SEO keyword", placeholder="e.g., 'AI resume builder'")
-
-    if st.button("Generate GEO Playbook"):
-        if not GROQ_API_KEY:
-            st.warning("Groq API key missing. Add it under Settings → Secrets.")
+        # Display Google results
+        if google_results:
+            st.subheader("🔎 Google Top 5 Results")
+            for item in google_results:
+                st.markdown(f"- [{item['title']}]({item['link']})  \n  {item['snippet']}")
         else:
-            geo_prompt = f"""
-You are a top Generative Engine Optimization (GEO) expert. For this service:
-\"\"\"{desc}\"\"\"
-and the target keyword: "{keyword}", generate the following in markdown:
+            st.info("No Google data (provide domain & SerpApi key)")
 
-1. **3–5 SEO-Friendly Blog Titles** (<60 chars) with the keyword.
-2. **Meta Tags**: <title> and <meta name="description"> optimized for AI snippets.
-3. **URL Slug Suggestions**: 2–3 concise, keyword-rich paths.
-4. **Content Outline**: H2/H3 headings with suggested word counts.
-5. **5–7 FAQs** formatted as JSON-LD for schema.org/FAQPage.
-6. **Why Choose Us?**: 4–6 bullet-point value propositions.
-7. **3–5 CTAs** tailored for conversational AI.
-8. **Linking Plan**: 3 internal pages + 2 external authority references.
-9. **Image Ideas & Alt Text** for 2–3 images.
-10. **Social Preview**: Open Graph & Twitter tags + 2 sample social posts.
-11. **Breadcrumb JSON-LD** block.
-12. **Organization JSON-LD** block.
-13. **2–3 Snippet Teasers** (40–50 words each).
-14. **Competitor Comparison**: Markdown table vs. 2–3 competitors.
-15. **Schema.org Checklist**: bullet list of additional schemas.
-16. **GEO Best Practices**: bullet summary of research, E-E-A-T, schema, tech SEO, PR, iteration, and AI tools.
-"""
+        # LLM Brand Description via Groq
+        llm_output = ""
+        if not brand:
+            st.error("Enter your brand name for LLM analysis")
+        elif not GROQ_API_KEY:
+            st.error("🔒 Set GROQ_API_KEY in Settings → Secrets")
+        else:
             headers = {
                 "Authorization": f"Bearer {GROQ_API_KEY}",
-                "Content-Type": "application/json"
+                "Content-Type":  "application/json"
             }
             payload = {
                 "model": "llama3-70b-8192",
-                "messages": [{"role": "user", "content": geo_prompt}]
+                "messages": [{"role": "user", "content": f"What is {brand}? Provide a concise description."}]
             }
             r = requests.post(
                 "https://api.groq.com/openai/v1/chat/completions",
-                headers=headers,
-                data=json.dumps(payload)
+                headers=headers, data=json.dumps(payload)
             )
-            if r.status_code == 200:
-                output = r.json()["choices"][0]["message"]["content"]
-                st.markdown("### 🏆 Ultra-GEO Playbook")
-                st.write(output)
+            if r.ok:
+                llm_output = r.json()["choices"][0]["message"]["content"]
+                st.subheader("🤖 LLM Brand Description")
+                st.write(llm_output)
             else:
-                st.error(f"Groq API Error: {r.text}")
+                st.error("❌ Groq error: " + r.text)
+
+        # Save to session for Tab 2
+        st.session_state.google_results = google_results
+        st.session_state.llm_output     = llm_output
+
+# --- Tab 2: GEO Expert Advice ---
+with tab2:
+    st.header("Step 2: GEO Expert Advice")
+    if not st.session_state.get("llm_output"):
+        st.info("Run the GEO Analysis in Tab 1 first")
+    else:
+        if st.button("Generate GEO Advice"):
+            google_results = st.session_state.get("google_results", [])
+            llm_output     = st.session_state.get("llm_output", "")
+
+            # Build expert prompt
+            advice_prompt = f"""
+You are a PhD-level Generative Engine Optimization (GEO) expert consulting a business owner.
+Domain: {domain}
+Brand: {brand}
+
+Top 5 Google results (title, link, snippet):
+{json.dumps(google_results, indent=2)}
+
+LLM Output:
+{llm_output}
+
+Provide detailed, actionable suggestions and strategic advice covering:
+- Why GEO is critical
+- Content structure & schema
+- Technical SEO for AI
+- Authority & citations (E-E-A-T)
+- Distribution & PR
+- Monitoring & iteration
+- Any other GEO best practices
+Format as a clear, bullet-pointed advisory report.
+"""
+
+            headers = {
+                "Authorization": f"Bearer {GROQ_API_KEY}",
+                "Content-Type":  "application/json"
+            }
+            payload = {
+                "model": "llama3-70b-8192",
+                "messages": [{"role": "user", "content": advice_prompt}]
+            }
+            r = requests.post(
+                "https://api.groq.com/openai/v1/chat/completions",
+                headers=headers, data=json.dumps(payload)
+            )
+            if r.ok:
+                advice = r.json()["choices"][0]["message"]["content"]
+                st.markdown("### 📋 GEO Expert Report")
+                st.write(advice)
+            else:
+                st.error("❌ Groq error: " + r.text)
