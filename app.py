@@ -115,7 +115,6 @@ with tab1:
             "geo_score": geo_score
         }
 
-
 # ------------------ Tab 2: GEO Expert ------------------ #
 with tab2:
     st.header("Step 2: PhD-Level GEO Expert Advice & Forecast")
@@ -147,6 +146,7 @@ REPORT STRUCTURE:
    - Provide 3 in-depth diagnostic points with direct quotes.
 
 2. **Prompt Engineering Strategies**
+   - Create content that aligns with these prompt formats.
    - Present 3 advanced prompt templates designed to surface the brand name, with usage examples:
      1. Template and example invocation
      2. Template and example invocation
@@ -198,3 +198,4 @@ Provide the advisory report in **clear, numbered sections** and **bullet points*
                 st.markdown(report, unsafe_allow_html=True)
             except Exception as e:
                 st.error(f"Groq API Error: {e}")
+
