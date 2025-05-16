@@ -88,8 +88,7 @@ with tab1:
 
         st.subheader("🌐 DuckDuckGo Brand/Domain Results")
         for res in ddg_brand_results:
-            st.markdown(f"- [{res['title']}]({res['href']})  
-  {res['snippet']}")
+            st.markdown(f"- [{res['title']}]({res['href']})<br>{res['snippet']}", unsafe_allow_html=True)
         if ddg_brand_found:
             st.success("✅ Brand found in Brand/Domain results")
         else:
