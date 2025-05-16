@@ -115,7 +115,6 @@ with tab1:
             "geo_score": geo_score
         }
 
-# (Initial setup and Tab 1 logic unchanged)
 
 # ------------------ Tab 2: GEO Expert ------------------ #
 with tab2:
@@ -126,6 +125,7 @@ with tab2:
     else:
         if st.button("Get Expert GEO Advice"):
             # Build an expert-level GEO prompt with deep analysis and three examples per recommendation
+            llm_snippet = data['llm_response'][:500].replace('"', '\"').replace("\n", " ")
             expert_prompt = f"""
 You are the world's leading PhD-level Generative Engine Optimization (GEO) expert. Based on the following analysis, provide an in-depth GEO advisory report with three concrete examples for each section. Do NOT give SEO tips—focus solely on LLM visibility strategies.
 
@@ -135,7 +135,7 @@ ANALYSIS:
 - Pre-Optimization GEO Score: {data['geo_score']}%
 
 LLM Response Snippet:
-"""{data['llm_response'][:500]}..."""
+"{llm_snippet}..."
 Brand present in LLM: {data['llm_found']}
 DuckDuckGo Prompt Visibility: {data['ddg_prompt_found']}
 DuckDuckGo Brand/Domain Visibility: {data['ddg_brand_found']}
@@ -166,7 +166,7 @@ REPORT STRUCTURE:
 
 5. **Plugin/API Exposure Techniques**
    - Outline 3 realistic plugin/API endpoints to expose live brand data:
-     1. `/api/v1/brand-info?name={brand}` example
+     1. `/api/v1/brand-info?name={{brand}}` example
      2. `/plugins/llmvisible/pricing` example
      3. `/tools/llmvisible/faq` example
 
