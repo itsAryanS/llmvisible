@@ -6,7 +6,7 @@ st.set_page_config(page_title="LLMVisible.com", layout="centered")
 st.title("🤖 LLMVisible.com – Be Seen by AI!")
 
 tab1, tab2 = st.tabs(["🔍 Prompt Tester", "AI Content Generator"])
-GROQ_API_KEY = st.secrets.get("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")
+GROQ_API_KEY = st.secrets.get("GROQ_API_KEY")
 
 # --- TAB 1: Prompt Tester ---
 with tab1:
